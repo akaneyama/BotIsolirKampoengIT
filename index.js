@@ -62,7 +62,13 @@ const {
         }
       }
     });
-  
+  const allowedUsers = process.env.ALLOWED_USERS
+  ? process.env.ALLOWED_USERS.split(',').map(nomor => nomor.trim() + '@s.whatsapp.net')
+  : [];
+
+  function hanyaBoleh(nomor) {
+    return allowedUsers.includes(nomor);
+  }
     sock.ev.on('messages.upsert', async (m) => {
       const msg = m.messages[0];
       if (!msg.message || msg.key.fromMe) return;
@@ -71,6 +77,12 @@ const {
       const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
   
       if (text.toLowerCase().startsWith('carinama')) {
+        if (!hanyaBoleh(sender)) {
+          await sock.sendMessage(sender, {
+            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
+          });
+          return;
+        }
         const namauser = text.slice(9).trim();
         (async () => {
           const hasil = await caripengguna(namauser)
@@ -82,6 +94,12 @@ const {
        
       }
       else if (text.toLowerCase().startsWith('hidupkan')) {
+        if (!hanyaBoleh(sender)) {
+          await sock.sendMessage(sender, {
+            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
+          });
+          return;
+        }
         const ipuser = text.slice(9).trim();
         if(ipuser.split('.').length === 4 && ipuser.startsWith('192.168') || ipuser.startsWith('123.123') || 
         ipuser.startsWith('172.16') || ipuser.startsWith('193.168')){
@@ -101,6 +119,12 @@ const {
         }
       }
       else if (text.toLowerCase().startsWith('matikan')) {
+        if (!hanyaBoleh(sender)) {
+          await sock.sendMessage(sender, {
+            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
+          });
+          return;
+        }
         const ipuser = text.slice(8).trim();
         if(ipuser.split('.').length === 4 && ipuser.startsWith('192.168') || ipuser.startsWith('123.123') || 
         ipuser.startsWith('172.16') || ipuser.startsWith('193.168')){
