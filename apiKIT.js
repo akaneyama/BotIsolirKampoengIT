@@ -1,11 +1,12 @@
 const axios = require('axios');
 const https = require('https');
+require('dotenv').config(); // panggil dotenv paling atas
 
 
-const username = 'akane'; 
-const password = 'akaneyama123'; 
-const url = 'https://lbkampoengit.daffaaditya.my.id:43987';
-const urlkputih = 'https://lbkampoengit.daffaaditya.my.id:43989';
+const username = process.env.USERNAME;
+const password = process.env.PASSWORD;
+const url = process.env.URL;
+const urlkputih = process.env.URLKPUTIH;
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
