@@ -3,8 +3,8 @@ const https = require('https');
 require('dotenv').config(); // panggil dotenv paling atas
 
 
-const username = process.env.USERNAME;
-const password = process.env.PASSWORD;
+const username = process.env.USERNAME1;
+const password = process.env.PASSWORD1;
 const url = process.env.URL;
 const urlkputih = process.env.URLKPUTIH;
 

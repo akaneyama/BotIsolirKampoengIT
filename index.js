@@ -10,7 +10,8 @@ const {
   const qrcode = require('qrcode');
   const express = require('express');
   const { disableBindingID, ambildatapakeAPI, caripengguna } = require('./apiKIT');
-  
+  require('dotenv').config();
+
   let qrData = ''; 
   
   const app = express();
@@ -73,12 +74,23 @@ const {
       const msg = m.messages[0];
       if (!msg.message || msg.key.fromMe) return;
   
-      const sender = msg.key.remoteJid;
-      const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
-  
+      const isGroup = msg.key.remoteJid.endsWith('@g.us');
+      const sender = isGroup ? msg.key.participant : msg.key.remoteJid;
+      const getTextFromMessage = (message) => {
+        if (message.conversation) return message.conversation;
+        if (message.extendedTextMessage?.text) return message.extendedTextMessage.text;
+        if (message.ephemeralMessage?.message?.conversation)
+          return message.ephemeralMessage.message.conversation;
+        if (message.ephemeralMessage?.message?.extendedTextMessage?.text)
+          return message.ephemeralMessage.message.extendedTextMessage.text;
+        return '';
+      };
+      const text = getTextFromMessage(msg.message);
+    
+
       if (text.toLowerCase().startsWith('carinama')) {
         if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(sender, {
+          await sock.sendMessage(msg.key.remoteJid, {
             text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
           });
           return;
@@ -89,13 +101,13 @@ const {
           const buttonMessage = {
             text: `${hasil}`
           };
-              await sock.sendMessage(sender, buttonMessage);
+              await sock.sendMessage(msg.key.remoteJid, buttonMessage);
         })();
        
       }
       else if (text.toLowerCase().startsWith('hidupkan')) {
         if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(sender, {
+          await sock.sendMessage(msg.key.remoteJid, {
             text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
           });
           return;
@@ -108,19 +120,19 @@ const {
             const buttonMessage = {
               text: `${hasil}`
             };
-                await sock.sendMessage(sender, buttonMessage);
+                await sock.sendMessage(msg.key.remoteJid, buttonMessage);
           })();
         }
         else{
           const buttonMessagegagal = {
             text: "Mohon Maaf ip yang anda masukkan kurang lengkap atau salah."
           };
-          await sock.sendMessage(sender, buttonMessagegagal);
+          await sock.sendMessage(msg.key.remoteJid, buttonMessagegagal);
         }
       }
       else if (text.toLowerCase().startsWith('matikan')) {
         if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(sender, {
+          await sock.sendMessage(msg.key.remoteJid, {
             text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
           });
           return;
@@ -133,14 +145,14 @@ const {
             const buttonMessage = {
               text: `${hasil}`
             };
-                await sock.sendMessage(sender, buttonMessage);
+                await sock.sendMessage(msg.key.remoteJid, buttonMessage);
           })();
         }
         else{
           const buttonMessagegagal = {
             text: "Mohon Maaf ip yang anda masukkan kurang lengkap atau salah."
           };
-          await sock.sendMessage(sender, buttonMessagegagal);
+          await sock.sendMessage(msg.key.remoteJid, buttonMessagegagal);
         }
       }
     });
