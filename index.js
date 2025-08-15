@@ -9,7 +9,7 @@ const {
   const fs = require('fs');
   const qrcode = require('qrcode');
   const express = require('express');
-  const { disableBindingID, ambildatapakeAPI, caripengguna } = require('./apiKIT');
+  const { disableBindingID, ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip} = require('./apiKIT');
   require('dotenv').config();
 
   let qrData = ''; 
@@ -96,8 +96,31 @@ const {
           return;
         }
         const namauser = text.slice(9).trim();
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
         (async () => {
           const hasil = await caripengguna(namauser)
+          const buttonMessage = {
+            text: `${hasil}`
+          };
+              await sock.sendMessage(msg.key.remoteJid, buttonMessage);
+        })();
+       
+      }
+      else if (text.toLowerCase().startsWith('cariip')) {
+        if (!hanyaBoleh(sender)) {
+          await sock.sendMessage(msg.key.remoteJid, {
+            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *cariip*.'
+          });
+          return;
+        }
+        const alamatip = text.slice(7).trim();
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
+        (async () => {
+          const hasil = await carialamatip(alamatip)
           const buttonMessage = {
             text: `${hasil}`
           };
@@ -130,6 +153,7 @@ const {
           await sock.sendMessage(msg.key.remoteJid, buttonMessagegagal);
         }
       }
+
       else if (text.toLowerCase().startsWith('matikan')) {
         if (!hanyaBoleh(sender)) {
           await sock.sendMessage(msg.key.remoteJid, {
@@ -155,7 +179,49 @@ const {
           await sock.sendMessage(msg.key.remoteJid, buttonMessagegagal);
         }
       }
+
+      else if (text.toLowerCase().startsWith('tambahclient')) {
+       try{
+        const args = text.trim().split(/\s+/);
+        const alamatip = args[1]
+        const nama = args.slice(2).join(" "); 
+        const totalalamatip = alamatip.trim().split('.');
+        if (totalalamatip.length == 4){
+          hasil = await editatautambahkanhotspot(alamatip,nama);
+          await sock.sendMessage(msg.key.remoteJid, {
+          text: hasil
+        });
+        }
+      }
+      catch(error){
+          await sock.sendMessage(msg.key.remoteJid, {
+          text: error.message
+        });
+      }
+      }
+    //   else if (text.toLowerCase().startsWith('ipkosong')){
+    //     if (!hanyaBoleh(sender)) {
+    //       await sock.sendMessage(msg.key.remoteJid, {
+    //         text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
+    //       });
+    //       return;
+    //     }
+    //     // Ambil argumen dari pesan
+    //   const args = text.trim().split(/\s+/);
+    //   const total = parseInt(args[1]) || 5; // default 5 kalau tidak ada angka
+    //   const ipdiminta = args[2] || '*';     // default semua subnet kalau tidak diisi
+
+    //   // Jalankan fungsi cariipkosong
+    //   const hasilPesan = await cariipkosong(total, ipdiminta);
+
+    //   // Kirim hasil ke WA
+    //   await sock.sendMessage(msg.key.remoteJid, {
+    //       text: hasilPesan
+    //   });
+    //   }
     });
+
+    
   };
   
   app.listen(PORT, () => {
