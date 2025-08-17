@@ -1,0 +1,8 @@
+===sudah===
+carinama <namaclient> (tambah queue) (done)
+cariip <ipclient> (tambah queue) (done)
+hidupkan <ipclient> (done)
+matikan <ipclient> (done)
+
+===belum===
+tambahclient <alamatip> <queue> <nama> (tambahqueue)

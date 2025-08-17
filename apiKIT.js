@@ -1,8 +1,7 @@
 const axios = require('axios');
 const https = require('https');
 const net = require('net');
-require('dotenv').config(); // panggil dotenv paling atas
-
+require('dotenv').config(); 
 
 const username = process.env.USERNAME1;
 const password = process.env.PASSWORD1;
@@ -14,7 +13,6 @@ const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 async function ambildatapakeAPI(targetalamatip, status) {
   let urlTarget;
 
-  // Tentukan URL target berdasarkan prefix IP
   if (
     targetalamatip.startsWith("192.168") ||
     targetalamatip.startsWith("123.123") ||
@@ -56,9 +54,6 @@ async function ambildatapakeAPI(targetalamatip, status) {
   }
 }
 
-
-
-
 async function disableBindingID(urlTarget, idIP, status) {
   const alamaturlbinding = `${urlTarget}/rest/ip/hotspot/ip-binding/${encodeURIComponent(idIP)}`;
   const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
@@ -90,136 +85,72 @@ async function disableBindingID(urlTarget, idIP, status) {
   }
 }
 
-
-
-
 async function caripengguna(namaPengguna) {
   try {
     const urls = [
       `${url}/rest/ip/hotspot/ip-binding`,
       `${urlkputih}/rest/ip/hotspot/ip-binding`
     ];
-  
+
     let semuaData = [];
-  
+    let semuaQueue = {};
+
+    // ambil semua binding + queue sekali per router
     for (const alamaturlbinding of urls) {
       const response = await axios.get(alamaturlbinding, {
         httpsAgent,
         auth: { username, password }
       });
-  
+
       semuaData = semuaData.concat(response.data);
+
+      const baseUrl = alamaturlbinding.replace("/rest/ip/hotspot/ip-binding", "");
+      semuaQueue[baseUrl] = await getAllQueue(baseUrl); // fungsi getAllQueue sama dengan yg tadi
     }
-  
+
+    // filter hasil binding berdasarkan comment (nama pengguna)
     const hasilPencarian = semuaData.filter(entry =>
       entry.comment &&
       entry.comment.toLowerCase().includes(namaPengguna.toLowerCase())
     );
-  
+
     if (hasilPencarian.length === 0) {
-      console.log(`Tidak ditemukan pengguna dengan nama diawali '${namaPengguna}'`);
+      console.log(`Tidak ditemukan pengguna dengan nama mengandung '${namaPengguna}'`);
       return;
     }
 
-    const queuePromises = hasilPencarian.map(result => cariqueue(result.address));
-    const queueResults = await Promise.all(queuePromises);
+    let pesan = "";
 
-    let pesan = '';
-    hasilPencarian.forEach((result, index) => {
+    for (const result of hasilPencarian) {
       const status = result.disabled === "true" ? "Isolir" : "Aktif";
-      pesan += `*comment*: ${result.comment}\n*address*: ${result.address}\n*status*: ${status}\n${queueResults[index]}\n\n`;
-    });
 
-  
+      // tentukan asal router dari IP
+      let baseUrl;
+      if (
+        result.address.startsWith("192.168") ||
+        result.address.startsWith("123.123") ||
+        result.address.startsWith("172.16")
+      ) {
+        baseUrl = url;
+      } else if (result.address.startsWith("193.168")) {
+        baseUrl = urlkputih;
+      }
+
+      // cari queue dari cache semuaQueue
+      const queueList = semuaQueue[baseUrl] || [];
+      const q = queueList.find(q => q.target === `${result.address}/32`);
+      const hasilqueue = q 
+      ? `*max limit*: ${formatSpeed(q["max-limit"])}` 
+      : "*max limit*: tidak ada";
+
+      pesan += `*comment*: ${result.comment}\n*address*: ${result.address}\n*status*: ${status}\n${hasilqueue}\n\n`;
+    }
+
     return pesan;
   } catch (error) {
     console.error("Gagal mengambil data:", error.message);
   }
-  
 }
-
-// function checkPort(host, port) {
-//   return new Promise((resolve) => {
-//       const socket = new net.Socket();
-//       socket.setTimeout(1000); 
-
-//       socket.on('connect', () => {
-//           socket.destroy();
-//           resolve(true); 
-//       });
-
-//       socket.on('timeout', () => {
-//           socket.destroy();
-//           resolve(false); 
-//       });
-
-//       socket.on('error', () => {
-//           resolve(false); 
-//       });
-
-//       socket.connect(port, host);
-//   });
-// }
-
-// async function cariipkosong(total, ipdiminta) {
-//   try {
-//       const urls = [
-//           `${url}/rest/ip/hotspot/ip-binding`,
-//           `${urlkputih}/rest/ip/hotspot/ip-binding`
-//       ];
-
-//       let semuaData = [];
-//       for (const alamaturlbinding of urls) {
-//           const response = await axios.get(alamaturlbinding, {
-//               httpsAgent,
-//               auth: { username, password }
-//           });
-//           semuaData = semuaData.concat(response.data);
-//       }
-
-//       const hasilPencarian = semuaData
-//           .filter(entry =>
-//               entry.comment &&
-//               entry.comment.toLowerCase().includes("new") && entry.address.includes(`192.168.${ipdiminta}`)
-//           )
-//           .slice(0, total);
-
-//       if (hasilPencarian.length === 0) {
-//           return `❌ Tidak ditemukan IP kosong.`;
-//       }
-
-//       let pesan = `📋 *Daftar IP Kosong (Port Tidak Aktif)*:\n\n`;
-//       pesan += '```';
-//       pesan += `No | Address         | Port  | Status\n`;
-//       pesan += `---|----------------|-------|-----------\n`;
-
-//       let no = 1;
-//       let adaTidakAktif = false;
-
-//       for (const result of hasilPencarian) {
-//           const host = result.address;
-//           const port = 80;
-//           const isOpen = await checkPort(host, port);
-
-//           if (!isOpen) {
-//               adaTidakAktif = true;
-//               pesan += `${String(no).padEnd(2)} | ${host.padEnd(15)} | ${String(port).padEnd(5)} | TIDAK AKTIF\n`;
-//               no++;
-//           }
-//       }
-
-//       pesan += '```';
-
-//       if (!adaTidakAktif) {
-//           return `✅ Semua port dari ${total} IP yang dicek aktif.`;
-//       }
-
-//       return pesan;
-
-//   } catch (err) {
-//       return `⚠️ Terjadi error: ${err.message}`;
-//   }
-// }
 
 async function carialamatip(alamatip) {
   try {
@@ -229,6 +160,8 @@ async function carialamatip(alamatip) {
     ];
   
     let semuaData = [];
+    let semuaQueue = [];
+
     for (const alamaturlbinding of urls) {
       const response = await axios.get(alamaturlbinding, {
         httpsAgent,
@@ -236,6 +169,9 @@ async function carialamatip(alamatip) {
       });
       
       semuaData = semuaData.concat(response.data);
+
+       const baseUrl = alamaturlbinding.replace("/rest/ip/hotspot/ip-binding", "");
+      semuaQueue[baseUrl] = await getAllQueue(baseUrl);
   }
   const hasilPencarian = semuaData.filter(entry => 
     entry.address && entry.address.includes(alamatip)   
@@ -246,20 +182,54 @@ async function carialamatip(alamatip) {
   }
   let pesan = '';
 
-  const queuePromises = hasilPencarian.map(entry => cariqueue(entry.address));
-  const queueResults = await Promise.all(queuePromises);
-  
-  hasilPencarian.forEach((result, index) => {
-    const status = result.disabled === "true" ? "Isolir" : "Aktif";
-    const hasilqueue = queueResults[index];
-  
-    pesan += `*comment*: ${result.comment}\n*address*: ${result.address}\n*status*: ${status}\n${hasilqueue}\n\n`;
-  });
+    for (const result of hasilPencarian) {
+      const status = result.disabled === "true" ? "Isolir" : "Aktif";
+
+      let baseUrl;
+      if (
+        result.address.startsWith("192.168") ||
+        result.address.startsWith("123.123") ||
+        result.address.startsWith("172.16")
+      ) {
+        baseUrl = url;
+      } else if (result.address.startsWith("193.168")) {
+        baseUrl = urlkputih;
+      }
+
+      const queueList = semuaQueue[baseUrl] || [];
+      const q = queueList.find(q => q.target === `${result.address}/32`);
+      const hasilqueue = q 
+      ? `*max limit*: ${formatSpeed(q["max-limit"])}` 
+      : "*max limit*: tidak ada";
+
+      pesan += `*comment*: ${result.comment}\n*address*: ${result.address}\n*status*: ${status}\n${hasilqueue}\n\n`;
+    }
+
     return pesan;
+  } catch (error) {
+    console.error("Gagal mengambil data:", error.message);
+  }
 }
-catch (error){
-  console.error("Gagal mengambil data:", error.message);
-}
+
+function formatSpeed(limitStr) {
+  if (!limitStr) return "tidak ada";
+
+  const [uploadStr, downloadStr] = limitStr.split("/");
+  const upload = parseInt(uploadStr, 10);
+  const download = parseInt(downloadStr, 10);
+
+  function convertToMbps(value) {
+    if (isNaN(value)) return "N/A";
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(0)} Mbps`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)} Kbps`;
+    } else {
+      return `${value} bps`;
+    }
+  }
+
+  return `${convertToMbps(upload)} / ${convertToMbps(download)}`;
 }
 
 async function cariqueue(alamatip) {
@@ -285,16 +255,29 @@ async function cariqueue(alamatip) {
     if (!result) {
       return `*max limit*: tidak ada`;
     }
-    return `*max limit*: ${result['max-limit']}`;
+    return `*max limit*: ${formatSpeed(q["max-limit"])}`;
     
   } catch (error) {
     return `Gagal mengambil queue: ${error.message}`;
   }
 }
 
+async function getAllQueue(urlTarget) {
+  try {
+    const response = await axios.get(`${urlTarget}/rest/queue/simple`, {
+      httpsAgent,
+      auth: { username, password }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Gagal mengambil semua queue:", error.message);
+    return [];
+  }
+}
 
 
-async function editatautambahkanhotspot(alamatip, nama) {
+
+async function editatautambahkanhotspot(alamatip, queue, nama) {
   let urlTarget;
   if (
     alamatip.startsWith("192.168") ||
@@ -381,19 +364,49 @@ async function editatautambahkanhotspot(alamatip, nama) {
     }
     
   }
-    
-    
+}
+
+async function carieditdantambahqueue(alamatip, nama, queue) {
+  let urlTarget;
+    if (
+    alamatip.startsWith("192.168") ||
+    alamatip.startsWith("123.123") ||
+    alamatip.startsWith("172.16")
+  ) {
+    urlTarget = url;
+  } else if (alamatip.startsWith("193.168")) {
+    urlTarget = urlkputih;
+  } else {
+    return "Alamat IP salah atau tidak ditemukan!";
   }
+  try{
+    const alamaturlbinding = `${urlTarget}/rest/queue/simple`;
+    const response = await axios.get(alamaturlbinding, {
+      httpsAgent,
+      auth: { username, password }
+    });
+    const data = response.data;
+    const result = data.find(entry => entry.target === alamatip);
+    if (!result){
+
+    }
+    else{
+
+    }
 
 
-// (async () => {
-//   await ambildatapakeAPI("123.123.123.4", "hidupkan");
-//   // await caripengguna("budi");
-// })();
- 
+  }
+  catch (error) {
+    return `${error.message}`;
+  }
+}
+
+
 
 module.exports = {
   disableBindingID,
   ambildatapakeAPI,
-  caripengguna, carialamatip, editatautambahkanhotspot
+  caripengguna, 
+  carialamatip, 
+  editatautambahkanhotspot
 };

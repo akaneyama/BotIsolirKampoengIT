@@ -199,26 +199,7 @@ const {
         });
       }
       }
-    //   else if (text.toLowerCase().startsWith('ipkosong')){
-    //     if (!hanyaBoleh(sender)) {
-    //       await sock.sendMessage(msg.key.remoteJid, {
-    //         text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
-    //       });
-    //       return;
-    //     }
-    //     // Ambil argumen dari pesan
-    //   const args = text.trim().split(/\s+/);
-    //   const total = parseInt(args[1]) || 5; // default 5 kalau tidak ada angka
-    //   const ipdiminta = args[2] || '*';     // default semua subnet kalau tidak diisi
-
-    //   // Jalankan fungsi cariipkosong
-    //   const hasilPesan = await cariipkosong(total, ipdiminta);
-
-    //   // Kirim hasil ke WA
-    //   await sock.sendMessage(msg.key.remoteJid, {
-    //       text: hasilPesan
-    //   });
-    //   }
+   
     });
 
     
