@@ -9,7 +9,7 @@ const {
   const fs = require('fs');
   const qrcode = require('qrcode');
   const express = require('express');
-  const { disableBindingID, ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip} = require('./apiKIT');
+  const { disableBindingID, ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip, bantuan} = require('./apiKIT');
   require('dotenv').config();
 
   let qrData = ''; 
@@ -180,14 +180,31 @@ const {
         }
       }
 
+      else if (text.toLowerCase().startsWith('bantuan')){
+        try{
+          const perintah = await bantuan()
+          await sock.sendMessage(msg.key.remoteJid, {
+          text: `${perintah}`
+        });
+        }
+        catch(error){
+          console.log(error.message);
+        }
+      }
+
+
       else if (text.toLowerCase().startsWith('tambahclient')) {
        try{
+         await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
         const args = text.trim().split(/\s+/);
         const alamatip = args[1]
-        const nama = args.slice(2).join(" "); 
+         const queue = args[2]
+        const nama = args.slice(3).join(" "); 
         const totalalamatip = alamatip.trim().split('.');
         if (totalalamatip.length == 4){
-          hasil = await editatautambahkanhotspot(alamatip,nama);
+          const hasil = await editatautambahkanhotspot(alamatip,queue,nama);
           await sock.sendMessage(msg.key.remoteJid, {
           text: hasil
         });

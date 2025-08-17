@@ -10,6 +10,18 @@ const urlkputih = process.env.URLKPUTIH;
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
+async function bantuan() {
+  const command = [
+  `*Cari berdasarkan nama*\n*Command*: carinama <namaclient>\n*Contoh*: carinama daffa`,
+  `*Cari berdasarkan IP*\n*Command*: cariip <ipclient>\n*Contoh*: cariip 192.168.10.121`,
+  `*Hidupkan pelanggan*\n*Command*: hidupkan <ipclient>\n*Contoh*: hidupkan 192.168.10.121`,
+  `*Disable pelanggan*\n*Command*: matikan <ipclient>\n*Contoh*: matikan 192.168.10.121`,
+  `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <limit> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 userbaru`
+];
+return command.join('\n\n')
+}
+
+
 async function ambildatapakeAPI(targetalamatip, status) {
   let urlTarget;
 
@@ -301,22 +313,36 @@ async function editatautambahkanhotspot(alamatip, queue, nama) {
 
     if(!result){
       const hasiltambahhotspot = await tambahhotspot(alamaturlbinding,alamatip,nama);
-      if (hasiltambahhotspot == true){
-        const hasil = await carialamatip(alamatip);
-        return hasil
+      if (hasiltambahhotspot == true ){
+      const hasilqueue = await carieditdantambahqueue(alamatip,nama,queue); 
+      if(hasilqueue == true){
+          const hasil = await carialamatip(alamatip);
+          return hasil
       }
       else{
-        return "Gagal. Perbaiki alamat ip atau nama!";
+         return "Gagal. menambahkan queue!. mohon diperbaiki atau masukkan secara manual";
+      }
+      }
+      else{
+        return "Gagal. menambahkan alamat ip atau nama!. mohon diperbaiki atau masukkan secara manual";
       }
     }
+
     const hasiledithotspot = await edithotspot(alamaturlbinding, result[".id"], nama);
     if (hasiledithotspot == true){
-      const hasil = await carialamatip(alamatip);
-      return hasil
-    }
-    else{
-      return "Gagal. Perbaiki alamat ip atau nama!"
-    }
+     const hasilqueue = await carieditdantambahqueue(alamatip,nama,queue); 
+      if(hasilqueue == true){
+          const hasil = await carialamatip(alamatip);
+          return hasil
+      }
+      else{
+         return "Gagal. menambahkan queue!. mohon diperbaiki atau masukkan secara manual";
+      }
+               
+      }
+      else{
+        return "Gagal. menambahkan alamat ip atau nama!. mohon diperbaiki atau masukkan secara manual";
+      }
   }
   catch (error){
     return `${error.message}`;
@@ -366,6 +392,62 @@ async function editatautambahkanhotspot(alamatip, queue, nama) {
   }
 }
 
+function ubahformatmikrotik(queue){
+  const nilaiawal = queue
+  const [args1, args2] = nilaiawal.split("/")
+  return `${args1}000000/${args2}000000`;
+}
+
+async function editqueue(id, url, alamatip, nama, queue) {
+  const alamaturlubah = `${url}/${encodeURIComponent(id)}`;
+  const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
+
+  try{
+    await axios.patch(alamaturlubah, 
+      {
+        "comment": `${nama} - nd`,
+        "disabled": "false",
+        "max-limit": `${ubahformatmikrotik(queue)}`,
+        "name": `${nama}`,
+        "target": `${alamatip}/32`,
+    }, {
+      httpsAgent,
+       headers: {
+         'Content-Type': 'application/json',
+         'Authorization': authHeader
+       }
+     });
+     return true;
+  }
+  catch(error){
+    return false;
+  }
+}
+
+async function tambahqueue(url, alamatip, nama, queue) {
+   const alamatiptambah = `${url}/add`;
+   const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
+    try{
+      await axios.post(alamatiptambah, {
+        "comment": `${nama} - nd`,
+        "disabled": "false",
+        "max-limit": `${ubahformatmikrotik(queue)}`,
+        "name": `${nama}`,
+        "target": `${alamatip}/32`,
+    }, {
+      httpsAgent,
+       headers: {
+         'Content-Type': 'application/json',
+         'Authorization': authHeader
+       }
+    });
+    return true;
+  }
+    catch (error){
+      return false;
+    }
+}
+
 async function carieditdantambahqueue(alamatip, nama, queue) {
   let urlTarget;
     if (
@@ -386,14 +468,13 @@ async function carieditdantambahqueue(alamatip, nama, queue) {
       auth: { username, password }
     });
     const data = response.data;
-    const result = data.find(entry => entry.target === alamatip);
+    const result = data.find(entry => entry.target === `${alamatip}/32`);
     if (!result){
-
+      const hasilresult = await tambahqueue(alamaturlbinding,alamatip,nama,queue);
+      return hasilresult
     }
-    else{
-
-    }
-
+    const hasilresult = await editqueue(result[".id"],alamaturlbinding, alamatip, nama, queue);
+    return hasilresult
 
   }
   catch (error) {
@@ -408,5 +489,6 @@ module.exports = {
   ambildatapakeAPI,
   caripengguna, 
   carialamatip, 
-  editatautambahkanhotspot
+  editatautambahkanhotspot,
+  bantuan
 };
