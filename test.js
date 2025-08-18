@@ -3,6 +3,7 @@ const command = [
   `*Cari berdasarkan IP*\n*Command*: cariip <ipclient>\n*Contoh*: cariip 192.168.10.121`,
   `*Hidupkan pelanggan*\n*Command*: hidupkan <ipclient>\n*Contoh*: hidupkan 192.168.10.121`,
   `*Disable pelanggan*\n*Command*: matikan <ipclient>\n*Contoh*: matikan 192.168.10.121`,
-  `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <queue> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 namapelanggan`
+  `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <queue> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 namapelanggan`,
+  `*Putus pelanggan*\n*Command*: putusclient <alamatip>\n*Contoh*: putusclient 192.168.10.122`
 ];
 console.log(command.join('\n\n'));

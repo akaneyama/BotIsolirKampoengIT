@@ -16,7 +16,8 @@ async function bantuan() {
   `*Cari berdasarkan IP*\n*Command*: cariip <ipclient>\n*Contoh*: cariip 192.168.10.121`,
   `*Hidupkan pelanggan*\n*Command*: hidupkan <ipclient>\n*Contoh*: hidupkan 192.168.10.121`,
   `*Disable pelanggan*\n*Command*: matikan <ipclient>\n*Contoh*: matikan 192.168.10.121`,
-  `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <limit> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 userbaru`
+  `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <limit> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 userbaru`,
+    `*Putus pelanggan*\n*Command*: putusclient <alamatip>\n*Contoh*: putusclient 192.168.10.122`
 ];
 return command.join('\n\n')
 }
@@ -287,8 +288,77 @@ async function getAllQueue(urlTarget) {
   }
 }
 
+async function putusclient(alamatip){
+  let urlTarget;
+    if (
+    alamatip.startsWith("192.168") ||
+    alamatip.startsWith("123.123") ||
+    alamatip.startsWith("172.16")
+  ) {
+    urlTarget = url;
+  } else if (alamatip.startsWith("193.168")) {
+    urlTarget = urlkputih;
+  } else {
+    return "Alamat IP salah atau tidak ditemukan!";
+  }
+  try{
+  const alamaturlbinding = `${urlTarget}/rest/ip/hotspot/ip-binding`;
+  const response = await axios.get(alamaturlbinding, {
+      httpsAgent,
+      auth: { username, password }
+  });
+  const data = response.data;
+  const result = data.find(entry => entry.address === alamatip);
+  if(result){
+    const hasiledithotspot = await edithotspot(alamaturlbinding, result[".id"], 'new');
+    if (hasiledithotspot == true){
+    const alamaturlqueuebinding = `${urlTarget}/rest/queue/simple`;
+    await deleteQueue(alamaturlqueuebinding,alamatip);
+    const hasil = await carialamatip(alamatip);
+    return hasil
+    }
+  }
+  else{
+    return 'Gagal Putus Client. IP Tidak Ditemukan! atau salah'
+  }
+  }
+  catch (error){
+    return error.message;
 
+  }
+}
 
+async function deleteQueue(url, alamatip) {
+  try{
+    const alamaturlbinding = `${url}`;
+    const response = await axios.get(alamaturlbinding, {
+      httpsAgent,
+      auth: { username, password }
+    });
+    const data = response.data;
+    const result = data.find(entry => entry.target === `${alamatip}/32`);
+    if(result){
+      const alamaturlubah = `${url}/${encodeURIComponent(result[".id"])}`;
+      const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
+      await axios.delete(alamaturlubah, {
+      httpsAgent,
+       headers: {
+         'Content-Type': 'application/json',
+         'Authorization': authHeader
+       }
+     });
+     return true;
+    }
+    else{
+      return false;
+    }
+  }
+  catch(error){
+    return error.message;
+  }
+}
+
+//status (tambah, putus)
 async function editatautambahkanhotspot(alamatip, queue, nama) {
   let urlTarget;
   if (
@@ -345,10 +415,12 @@ async function editatautambahkanhotspot(alamatip, queue, nama) {
       }
   }
   catch (error){
-    return `${error.message}`;
+    return error.message;
   }
 
-  async function edithotspot(url,id,nama) {
+ 
+}
+ async function edithotspot(url,id,nama) {
     const alamaturlubah = `${url}/${encodeURIComponent(id)}`;
     const authHeader = 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64');
 
@@ -390,7 +462,6 @@ async function editatautambahkanhotspot(alamatip, queue, nama) {
     }
     
   }
-}
 
 function ubahformatmikrotik(queue){
   const nilaiawal = queue
@@ -490,5 +561,5 @@ module.exports = {
   caripengguna, 
   carialamatip, 
   editatautambahkanhotspot,
-  bantuan
+  bantuan, putusclient
 };

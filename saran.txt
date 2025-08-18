@@ -4,5 +4,7 @@ cariip <ipclient> (tambah queue) (done)
 hidupkan <ipclient> (done)
 matikan <ipclient> (done)
 tambahclient <alamatip> <queue> <nama> (done)
+putusclient <alamatip>
 
 ===belum===
+editkecepatan <alamatip> <queuue>

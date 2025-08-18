@@ -9,7 +9,7 @@ const {
   const fs = require('fs');
   const qrcode = require('qrcode');
   const express = require('express');
-  const { disableBindingID, ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip, bantuan} = require('./apiKIT');
+  const { disableBindingID, putusclient,ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip, bantuan} = require('./apiKIT');
   require('dotenv').config();
 
   let qrData = ''; 
@@ -217,6 +217,35 @@ const {
       }
       }
    
+
+      else if (text.toLowerCase().startsWith('putusclient')) {
+       try{
+         await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
+        const args = text.trim().split(/\s+/);
+        const alamatip = args[1]
+        const totalalamatip = alamatip.trim().split('.');
+        if (totalalamatip.length == 4){
+          const hasil = await putusclient(alamatip);
+          await sock.sendMessage(msg.key.remoteJid, {
+          text: hasil
+        });
+        }
+
+        else{
+           await sock.sendMessage(msg.key.remoteJid, {
+           text: 'Alamat IP Salah atau kurang!'
+        });
+        }
+      }
+      catch(error){
+          const gagal = error.message; 
+          await sock.sendMessage(msg.key.remoteJid, {
+          text: gagal
+        });
+      }
+      }
     });
 
     
