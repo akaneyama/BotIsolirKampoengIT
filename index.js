@@ -89,16 +89,11 @@ const {
     
 
       if (text.toLowerCase().startsWith('carinama')) {
-        if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(msg.key.remoteJid, {
-            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
-          });
-          return;
-        }
-        const namauser = text.slice(9).trim();
-        await sock.sendMessage(msg.key.remoteJid, {
+         await sock.sendMessage(msg.key.remoteJid, {
           text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
         });
+        const namauser = text.slice(9).trim();
+        
         (async () => {
           const hasil = await caripengguna(namauser)
           const buttonMessage = {
@@ -109,16 +104,11 @@ const {
        
       }
       else if (text.toLowerCase().startsWith('cariip')) {
-        if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(msg.key.remoteJid, {
-            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *cariip*.'
-          });
-          return;
-        }
-        const alamatip = text.slice(7).trim();
-        await sock.sendMessage(msg.key.remoteJid, {
+         await sock.sendMessage(msg.key.remoteJid, {
           text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
         });
+        const alamatip = text.slice(7).trim();
+        
         (async () => {
           const hasil = await carialamatip(alamatip)
           const buttonMessage = {
@@ -129,12 +119,9 @@ const {
        
       }
       else if (text.toLowerCase().startsWith('hidupkan')) {
-        if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(msg.key.remoteJid, {
-            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
-          });
-          return;
-        }
+         await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
         const ipuser = text.slice(9).trim();
         if(ipuser.split('.').length === 4 && ipuser.startsWith('192.168') || ipuser.startsWith('123.123') || 
         ipuser.startsWith('172.16') || ipuser.startsWith('193.168')){
@@ -155,12 +142,9 @@ const {
       }
 
       else if (text.toLowerCase().startsWith('matikan')) {
-        if (!hanyaBoleh(sender)) {
-          await sock.sendMessage(msg.key.remoteJid, {
-            text: '❌ Anda tidak memiliki izin untuk menggunakan perintah *carinama*.'
-          });
-          return;
-        }
+        await sock.sendMessage(msg.key.remoteJid, {
+          text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+        });
         const ipuser = text.slice(8).trim();
         if(ipuser.split('.').length === 4 && ipuser.startsWith('192.168') || ipuser.startsWith('123.123') || 
         ipuser.startsWith('172.16') || ipuser.startsWith('193.168')){

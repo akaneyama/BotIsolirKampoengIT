@@ -7,4 +7,4 @@ tambahclient <alamatip> <queue> <nama> (done)
 putusclient <alamatip>
 
 ===belum===
-editkecepatan <alamatip> <queuue>
+editlimit <alamatip> <queuue>

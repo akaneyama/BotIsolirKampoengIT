@@ -554,6 +554,27 @@ async function carieditdantambahqueue(alamatip, nama, queue) {
 }
 
 
+async function editlimitasi( alamatip, limitasibaru){
+  let urlTarget;
+    if (
+    alamatip.startsWith("192.168") ||
+    alamatip.startsWith("123.123") ||
+    alamatip.startsWith("172.16")
+  ) {
+    urlTarget = url;
+  } else if (alamatip.startsWith("193.168")) {
+    urlTarget = urlkputih;
+  } else {
+    return "Alamat IP salah atau tidak ditemukan!";
+  }
+  try{
+    
+  }
+  catch(error){
+
+  }
+}
+
 
 module.exports = {
   disableBindingID,
