@@ -9,7 +9,7 @@ const {
   const fs = require('fs');
   const qrcode = require('qrcode');
   const express = require('express');
-  const { disableBindingID, putusclient,ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip, bantuan} = require('./apiKIT');
+  const { disableBindingID, putusclient,ambildatapakeAPI, caripengguna, editatautambahkanhotspot , carialamatip, bantuan, editlimitasi, tambahlimitasiaja} = require('./apiKIT');
   require('dotenv').config();
 
   let qrData = ''; 
@@ -190,7 +190,7 @@ const {
         if (totalalamatip.length == 4){
           const hasil = await editatautambahkanhotspot(alamatip,queue,nama);
           await sock.sendMessage(msg.key.remoteJid, {
-          text: hasil
+          text: `${hasil}`
         });
         }
       }
@@ -213,7 +213,7 @@ const {
         if (totalalamatip.length == 4){
           const hasil = await putusclient(alamatip);
           await sock.sendMessage(msg.key.remoteJid, {
-          text: hasil
+          text: `${hasil}`
         });
         }
 
@@ -230,7 +230,94 @@ const {
         });
       }
       }
+      else if (text.toLowerCase().startsWith('editlimit')) {
+        try {
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+            });
+    
+            const args = text.trim().split(/\s+/);
+            const alamatip = args[1];
+            const totalalamatip = alamatip ? alamatip.trim().split('.') : [];
+    
+            if (totalalamatip.length === 4) {
+                if (args[2]) {
+                    const queue = args[2];
+                    const queuecek = queue.trim().split('/');
+                    if (queuecek.length == 2) {
+                        const hasil = await editlimitasi(alamatip, queue);
+                        await sock.sendMessage(msg.key.remoteJid, {
+                            text: hasil
+                        });
+                    }
+                } else {
+                    await sock.sendMessage(msg.key.remoteJid, {
+                        text: "Mohon Maaf Data Tidak Lengkap"
+                    });
+                }
+            } else {
+                await sock.sendMessage(msg.key.remoteJid, {
+                    text: 'Alamat IP Salah atau kurang!'
+                });
+            }
+        } catch (error) {
+            console.log("Error:", error.message);
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: error.message
+            });
+        }
+    }
+    else if (text.toLowerCase().startsWith('tambahlimit')) {
+      try {
+          await sock.sendMessage(msg.key.remoteJid, {
+              text: 'Mohon menunggu. Server sedang menangani permintaan anda!'
+          });
+  
+          const args = text.trim().split(/\s+/);
+          const alamatip = args[1];
+          const totalalamatip = alamatip ? alamatip.trim().split('.') : [];
+  
+          if (totalalamatip.length === 4) {
+              if (args[2]) {
+                  const queue = args[2];
+                  const queuecek = queue.trim().split('/');
+                  if (queuecek.length == 2) {
+                      const nama = args.slice(3).join(" "); 
+                      if(nama && nama.trim() !== ""){
+                        const hasil = await tambahlimitasiaja(alamatip, nama, queue);
+                        await sock.sendMessage(msg.key.remoteJid, {
+                            text: hasil
+                        });
+                      }
+                      else{
+                        await sock.sendMessage(msg.key.remoteJid, {
+                          text: "Mohon Maaf Data Tidak Lengkap"
+                      });
+                      }
+                     
+                  }
+              } else {
+                  await sock.sendMessage(msg.key.remoteJid, {
+                      text: "Mohon Maaf Data Tidak Lengkap"
+                  });
+              }
+          } else {
+              await sock.sendMessage(msg.key.remoteJid, {
+                  text: 'Alamat IP Salah atau kurang!'
+              });
+          }
+      } catch (error) {
+          console.log("Error:", error.message);
+          await sock.sendMessage(msg.key.remoteJid, {
+              text: error.message
+          });
+      }
+  }
+  
+    
     });
+
+    
 
     
   };

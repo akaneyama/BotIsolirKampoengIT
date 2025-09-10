@@ -17,7 +17,9 @@ async function bantuan() {
   `*Hidupkan pelanggan*\n*Command*: hidupkan <ipclient>\n*Contoh*: hidupkan 192.168.10.121`,
   `*Disable pelanggan*\n*Command*: matikan <ipclient>\n*Contoh*: matikan 192.168.10.121`,
   `*Tambah pelanggan*\n*Command*: tambahclient <alamatip> <limit> <nama>\n*Contoh*: tambahclient 192.168.10.122 10/10 userbaru`,
-    `*Putus pelanggan*\n*Command*: putusclient <alamatip>\n*Contoh*: putusclient 192.168.10.122`
+  `*Putus pelanggan*\n*Command*: putusclient <alamatip>\n*Contoh*: putusclient 192.168.10.122`,
+  `*edit bandwidth client*\n*command*: editlimit <alamatip> <limit>\n*Contoh*: editlimit 192.168.7.250 10/10`,
+  `*Tambah bandwidth client (jika client belum ada bandwidth sebelumnya)*\n*command*: tambahlimit <alamatip> <limit> <nama>\n*Contoh*: editlimit 192.168.7.250 10/10 nabil`
 ];
 return command.join('\n\n')
 }
@@ -568,10 +570,70 @@ async function editlimitasi( alamatip, limitasibaru){
     return "Alamat IP salah atau tidak ditemukan!";
   }
   try{
-    
+    const alamaturlbinding = `${urlTarget}/rest/queue/simple`;
+    const response = await axios.get(alamaturlbinding, {
+      httpsAgent,
+      auth: {username, password}
+    });
+    const data = response.data;
+    const hasil = data.find(entry => entry.target === `${alamatip}/32`);
+    if(!hasil){
+      return ` Mohon maaf untuk alamat ip: ${alamatip} belum diberi limit. silahkan gunakan perintah *tambahlimit*!`;
+    }
+    else{
+      const hasilqueue = await editqueue(hasil[".id"],alamaturlbinding,alamatip,hasil.name.toString(),limitasibaru);
+      if(hasilqueue == true){
+        const hasil = await carialamatip(alamatip);
+        return hasil
+      }
+      else{
+        return "Gagal. menambahkan queue!. mohon diperbaiki atau masukkan secara manual";
+      }
+
+    }
   }
   catch(error){
+    return `${error.message}`;
+  }
+}
 
+async function tambahlimitasiaja(alamatip, nama, queue){
+  let urlTarget;
+    if (
+    alamatip.startsWith("192.168") ||
+    alamatip.startsWith("123.123") ||
+    alamatip.startsWith("172.16")
+  ) {
+    urlTarget = url;
+  } else if (alamatip.startsWith("193.168")) {
+    urlTarget = urlkputih;
+  } else {
+    return "Alamat IP salah atau tidak ditemukan!";
+  }
+  try{
+    const alamaturlbinding = `${urlTarget}/rest/queue/simple`;
+    const response = await axios.get(alamaturlbinding, {
+      httpsAgent,
+      auth: { username, password }
+    });
+    const data = response.data;
+    const result = data.find(entry => entry.target === `${alamatip}/32`);
+    if (!result){
+      const hasilresult = await tambahqueue(alamaturlbinding,alamatip,nama,queue);
+      if(hasilresult == true){
+        const hasil = await carialamatip(alamatip);
+        return hasil
+      }
+      else{
+        return "Gagal. menambahkan queue!. mohon diperbaiki atau masukkan secara manual";
+      }
+    }
+    else{
+      return `Alamat IP: ${alamatip} Sudah Ada Limit. Silahkan gunakan perintah *editlimit*!`
+    }
+  }
+  catch(error){
+    return `${error.message}`;
   }
 }
 
@@ -582,5 +644,5 @@ module.exports = {
   caripengguna, 
   carialamatip, 
   editatautambahkanhotspot,
-  bantuan, putusclient
+  bantuan, putusclient, editlimitasi,tambahlimitasiaja
 };

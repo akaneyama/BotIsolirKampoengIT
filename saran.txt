@@ -5,6 +5,8 @@ hidupkan <ipclient> (done)
 matikan <ipclient> (done)
 tambahclient <alamatip> <queue> <nama> (done)
 putusclient <alamatip>
+editlimit <alamatip> <queuue>
+tambahlimit <alamatip> <queue> <namasetelahnya>
 
 ===belum===
-editlimit <alamatip> <queuue>
+
